@@ -12,6 +12,8 @@ import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 
 class MainActivity : AppCompatActivity() {
+    private var isUpdating = false
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
@@ -27,25 +29,30 @@ class MainActivity : AppCompatActivity() {
         val firstCurrent = findViewById<EditText>(R.id.firstCur);
         val secondCurrent = findViewById<EditText>(R.id.secondCur);
 
-        val currencies : Array<String> = arrayOf("United States - Dollar", "Europe - Euro", "China - Yuan", "Japan - Yuan", "VietNam - Dong");
+        val currencies : Array<String> = arrayOf("United States - Dollar", "Europe - Euro", "China - Yuan", "Japan - Yen", "VietNam - Dong");
         val exchangeRates = mapOf(
             "United States - Dollar" to 1.0,
             "Europe - Euro" to 0.85,
             "China - Yuan" to 6.45,
-            "Japan - Yuan" to 110.0,
-            "VietNam - Dong" to 23000.050
+            "Japan - Yen" to 110.0,
+            "VietNam - Dong" to 25000.050
         )
         val adapter = ArrayAdapter(this, android.R.layout.simple_spinner_dropdown_item, currencies)
         spinnerFrom.adapter = adapter
         spinnerTo.adapter = adapter
 
-        val convertCurrency = { fromValue: EditText, toValue: EditText, fromCurrency: String, toCurrency: String ->
-            val amount = fromValue.text.toString().toDoubleOrNull()
-            if (amount != null && exchangeRates.containsKey(fromCurrency) && exchangeRates.containsKey(toCurrency)) {
-                val result = amount / exchangeRates[fromCurrency]!! * exchangeRates[toCurrency]!!
-                toValue.setText("%.2f".format(result))
+        val convertCurrency =
+            convertCurrency@{ fromValue: EditText, toValue: EditText, fromCurrency: String, toCurrency: String ->
+                if (isUpdating) return@convertCurrency
+
+                val amount = fromValue.text.toString().toDoubleOrNull()
+                if (amount != null && exchangeRates.containsKey(fromCurrency) && exchangeRates.containsKey(toCurrency)) {
+                    isUpdating = true  // Đánh dấu đang cập nhật
+                    val result = amount / exchangeRates[fromCurrency]!! * exchangeRates[toCurrency]!!
+                    toValue.setText("%.2f".format(result))
+                    isUpdating = false
+                }
             }
-        }
 
         val textWatcher1 = object : TextWatcher {
             override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
